@@ -17,7 +17,7 @@ In your Node-RED settings.js file set teh nodesDir property to this directory.
 node red.js -v
 ```
 
-Open your browser to http://localhost:1880/#
+Open your browser to localhost:1880/#
 
 
 # Vortex Overview
