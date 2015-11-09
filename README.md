@@ -3,7 +3,7 @@ Node-RED nodes for publishing data to and subscribing to data from PrismTech Vor
 
 # Installing
 ## Clone node-vortex
-Clone the [node-vortex|https://github.com/PrismTech/node-vortex] repository.
+Clone the https://github.com/PrismTech/node-vortex repository.
 Install node module locally from source
 ```bash
 npm link node-vortex
