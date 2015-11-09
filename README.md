@@ -1,6 +1,25 @@
 # node-red-node-vortex
 Node-RED nodes for publishing data to and subscribing to data from PrismTech Vortex
 
+# Installing
+## Clone node-vortex
+Clone the [node-vortex|https://github.com/PrismTech/node-vortex] repository.
+Install node module locally from source
+```bash
+npm link node-vortex
+``` 
+
+## Add the Vortex nodes to Node-RED
+In your Node-RED settings.js file set teh nodesDir property to this directory.
+
+## Run Node-RED
+```bash
+node red.js -v
+```
+
+Open your browser to http://localhost:1880/#
+
+
 # Vortex Overview
 PrismTech’s Vortex Intelligent Data Sharing Platform provides the leading implementations of the Object Management Group’s Data Distribution Service (DDS) for Real-time Systems standard. DDS is a middleware protocol and API standard for data-centric connectivity and is the only standard able to meet the advanced requirements of the Internet of Things (IoT). DDS provides the low-latency data connectivity, extreme reliability and scalability that business and mission-critical IoT applications need. For more information visit www.prismtech.com/vortex .
 
