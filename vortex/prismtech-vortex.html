@@ -20,6 +20,10 @@
         <input type="text" id="node-input-topic">
     </div>
     <div class="form-row">
+        <label for="node-input-topicType"><i class="fa fa-newspaper-o"></i> Topic Type</label>
+        <input type="text" id="node-input-topicType">
+    </div>
+    <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name">
     </div>
@@ -30,8 +34,17 @@
     <div class="form-row">
         <label for="node-input-reliability"><i class="fa fa-link"></i> Reliability</label>
         <select id="node-input-reliability" style="width:125px !important">
-            <option value="1">Best Effort</option>
             <option value="0">Reliable</option>
+			<option value="1">Best Effort</option>
+        </select>
+    </div>
+	<div class="form-row">
+        <label for="node-input-durability"><i class="fa fa-link"></i> Durability</label>
+        <select id="node-input-durability" style="width:125px !important">
+            <option value="0">Volatile</option>
+            <option value="1">TransientLocal</option>
+			<option value="2">Transient</option>
+            <option value="3">Persistent</option>
         </select>
     </div>
     <div class="form-row">
@@ -64,18 +77,20 @@
         defaults: {
             name: {value: ""},
             topic: {value:"",required:true},
+			topicType: {value:""},
             domain: {value: "0", required:true,validate:RED.validators.number()},
             reliability: {value:""},
+			durability: {value:""},
             history: {value: ""},
             history_depth: {value: ""},
             content_filter: {value: ""},
             time_filter: {value: ""},
             vortex: {type:"prismtech-vortex", required:true},
         },
-        color:"#d8651d",
+        color:"#F7A520",
         inputs:0,
         outputs:1,
-        icon: "white-globe.png",
+        icon: "vortex.png",
         paletteLabel: "Vortex In",
         label: function() {
             return this.name||this.topic||"Vortex";
@@ -96,6 +111,10 @@
         <input type="text" id="node-input-topic">
     </div>
     <div class="form-row">
+        <label for="node-input-topicType"><i class="fa fa-newspaper-o"></i> Topic Type</label>
+        <input type="text" id="node-input-topicType">
+    </div>
+    <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name">
     </div>
@@ -107,8 +126,17 @@
     <div class="form-row">
         <label for="node-input-reliability"><i class="fa fa-link"></i> Reliability</label>
         <select id="node-input-reliability" style="width:125px !important">
-            <option value="1">Best Effort</option>
             <option value="0">Reliable</option>
+			<option value="1">Best Effort</option>
+        </select>
+    </div>
+	<div class="form-row">
+        <label for="node-input-durability"><i class="fa fa-link"></i> Durability</label>
+        <select id="node-input-durability" style="width:125px !important">
+            <option value="0">Volatile</option>
+            <option value="1">TransientLocal</option>
+			<option value="2">Transient</option>
+            <option value="3">Persistent</option>
         </select>
     </div>
     <div class="form-row">
@@ -133,16 +161,18 @@
         defaults: {
             name: {value: ""},
             topic: {value:"",required:true},
+			topicType: {value:""},
             domain: {value: "0", required:true,validate:RED.validators.number()},
             reliability: {value:""},
+			durability: {value:""},
             history: {value: ""},
             history_depth: {value: ""},
             vortex: {type:"prismtech-vortex", required:true},
         },
-        color:"#d8651d",
+        color:"#F7A520",
         inputs:1,
         outputs:0,
-        icon: "white-globe.png",
+        icon: "vortex.png",
         paletteLabel: "Vortex Out",
         align: "right",
         label: function() {
