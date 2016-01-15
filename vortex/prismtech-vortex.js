@@ -93,49 +93,54 @@ module.exports = function (RED) {
     });
 
     function ConfigureQos(qosContainer, node) {
+        var qos = qosContainer;
         if ((typeof(node.partition) !== 'undefined') && (node.partition !== null)) {
-            qosContainer.add(node.vortexConn.vortex.Partition(node.partition));
+            qos = qos.add(node.vortexConn.vortex.Partition(node.partition));
         }
 
         if ((typeof(node.history) !== null) && (node.history !== null)) {
             var kind = parseInt(node.history, 10);
             if (kind == node.vortexConn.vortex.HistoryKind.KeepAll) {
-                qosContainer.add(node.vortexConn.vortex.History.KeepAll);
+                qos = qos.add(node.vortexConn.vortex.History.KeepAll);
             } else {
-                qosContainer.add(node.vortexConn.vortex.History.KeepLast(parseInt(node.history_depth, 10)));
+                qos = qos.add(node.vortexConn.vortex.History.KeepLast(parseInt(node.history_depth, 10)));
             }
         }
 
         if ((typeof(node.reliability) !== null) && (node.reliability !== null)) {
             var kind = parseInt(node.reliability, 10);
             if (kind == node.vortexConn.vortex.ReliabilityKind.BestEffort) {
-                qosContainer.add(node.vortexConn.vortex.Reliability.BestEffort);
+                qos = qos.add(node.vortexConn.vortex.Reliability.BestEffort);
             } else {
-                qosContainer.add(node.vortexConn.vortex.Reliability.Reliable);
+                qos = qos.add(node.vortexConn.vortex.Reliability.Reliable);
             }
         }
 
         if ((typeof(node.durability) !== null) && (node.durability !== null)) {
+            console.warn("Create durability");
             var kind = parseInt(node.durability, 10);
             if (kind === node.vortexConn.vortex.DurabilityKind.Volatile) {
-                qosContainer.add(node.vortexConn.vortex.Durability.Volatile);
+                qos = qos.add(node.vortexConn.vortex.Durability.Volatile);
             } else if (kind === node.vortexConn.vortex.DurabilityKind.TransientLocal) {
-                qosContainer.add(node.vortexConn.vortex.Durability.TransientLocal);
+                qos = qos.add(node.vortexConn.vortex.Durability.TransientLocal);
             } else if (kind === node.vortexConn.vortex.DurabilityKind.Transient) {
-                qosContainer.add(node.vortexConn.vortex.Durability.Transient);
+                qos = qos.add(node.vortexConn.vortex.Durability.Transient);
             } else if (kind === node.vortexConn.vortex.DurabilityKind.Persistent) {
-                qosContainer.add(node.vortexConn.vortex.Durability.Persistent);
+                console.warn("Create durability -- persistent");
+                qos = qos.add(node.vortexConn.vortex.Durability.Persistent);
             }
         }
 
 
-        if ((typeof(node.content_filter) !== null) && (node.content_filter !== null)) {
-            qosContainer.add(node.vortexConn.vortex.ContentFilter(node.content_filter));
+        if ((node.content_filter != undefined) && (typeof(node.content_filter) !== null) && (node.content_filter !== null) && (node.content_filter !== '')) {
+            qos = qos.add(node.vortexConn.vortex.ContentFilter(node.content_filter));
         }
 
-        if ((typeof(node.time_filter) !== null) && (node.time_filter !== null)) {
-            qosContainer.add(node.vortexConn.vortex.TimeFilter(node.time_filter));
+        if ((node.time_filter != undefined) && (typeof(node.time_filter) !== null) && (node.time_filter !== null) && (node.time_filter !== '')) {
+            qos = qos.add(node.vortexConn.vortex.TimeFilter(node.time_filter));
         }
+
+        return qos;
     }
 
     function VortexInNode(n) {
@@ -163,19 +168,22 @@ module.exports = function (RED) {
 
         if (nodeReader.vortexConn) {
             console.warn("[VortexInNode]  -- connecting -- " + nodeReader.vortexConn.vortexurl);
-
+            var listener;
             var createReader = function () {
                 var tqos = new nodeReader.vortexConn.vortex.TopicQos(nodeReader.vortexConn.vortex.Reliability.BestEffort);
-                var tdef = new nodeReader.vortexConn.vortex.Topic(nodeReader.domain, nodeReader.topic, tqos, nodeReader.topicType);
+                console.warn("[VortexInNode]  -- topic -- " + nodeReader.topic + " [" + nodeReader.topicType + "]");
+                var tdef =  (nodeReader.topicType == undefined || nodeReader.topicType == '') ?
+                    new nodeReader.vortexConn.vortex.Topic(nodeReader.domain, nodeReader.topic, tqos) :
+                    new nodeReader.vortexConn.vortex.Topic(nodeReader.domain, nodeReader.topic, tqos, nodeReader.topicType);
 
                 tdef.onregistered = function () {
                     var drQos = new nodeReader.vortexConn.vortex.DataReaderQos();
 
                     ConfigureQos(drQos, nodeReader);
 
-                    dr = new nodeReader.vortexConn.vortex.DataReader(node.vortexConn.client, tdef, drQos);
+                    dr = new nodeReader.vortexConn.vortex.DataReader(nodeReader.vortexConn.client, tdef, drQos);
 
-                    dr.addListener(function (data) {
+                    listener = dr.addListener(function (data) {
                         var msg = {};
                         msg.payload = data;
                         msg.topic = nodeReader.topicType;
@@ -218,6 +226,8 @@ module.exports = function (RED) {
 
         nodeReader.on("close", function () {
             console.warn("[VortexInNode] -- Close");
+            dr.removeListener(listener);
+            dr.close();
         });
 
     }
@@ -243,59 +253,66 @@ module.exports = function (RED) {
         this.vortexConn = RED.nodes.getNode(this.vortexServer);
         var dw = null;
         var nodeWriter = this;
+        var connected = false;
+        nodeWriter.setMaxListeners(1);
 
         nodeWriter.on('input', function (msg) {
+            if(nodeWriter.connected) {
+                console.log(msg.payload);
+                dw.write(msg.payload);
+            } else {
+                //if (msg.topic == 'connect' && msg.payload == 'on') {
+                if (nodeWriter.vortexConn) {
+                    console.warn("[VortexOutNode]  -- connecting -- " + nodeWriter.vortexConn.vortexurl);
 
-            //if (msg.topic == 'connect' && msg.payload == 'on') {
-            if (nodeWriter.vortexConn) {
-                console.warn("[VortexOutNode]  -- connecting -- " + nodeWriter.vortexConn.vortexurl);
+                    var createWriter = function () {
+                        var tqos = new nodeWriter.vortexConn.vortex.TopicQos(nodeWriter.vortexConn.vortex.Reliability.BestEffort);
+                        console.warn("[VortexOutNode]  -- topic -- " + nodeWriter.topic + " [" + nodeWriter.topicType + "]");
+                        var tdef = (nodeWriter.topicType == undefined || nodeWriter.topicType == '') ?
+                            new nodeWriter.vortexConn.vortex.Topic(nodeWriter.domain, nodeWriter.topic, tqos) :
+                            new nodeWriter.vortexConn.vortex.Topic(nodeWriter.domain, nodeWriter.topic, tqos, nodeWriter.topicType);
 
-                var createWriter = function () {
-                    var tqos = new nodeWriter.vortexConn.vortex.TopicQos(nodeWriter.vortexConn.vortex.Reliability.BestEffort);
-                    console.warn("[VortexOutNode]  -- topic -- " + nodeWriter.topic + " [" + nodeWriter.topicType + "]");
-                    var tdef = new nodeWriter.vortexConn.vortex.Topic(nodeWriter.domain, nodeWriter.topic, tqos, nodeWriter.topicType);
+                        tdef.onregistered = function () {
+                            var dwQos = new nodeWriter.vortexConn.vortex.DataWriterQos();
 
-                    tdef.onregistered = function () {
-                        var dwQos = new nodeWriter.vortexConn.vortex.DataWriterQos();
+                            dwQos = ConfigureQos(dwQos, nodeWriter);
+                            console.warn("[VortexOutNode]  -- dw qos -- " + JSON.stringify(dwQos));
+                            dw = new nodeWriter.vortexConn.vortex.DataWriter(nodeWriter.vortexConn.client, tdef, dwQos);
 
-                        ConfigureQos(dwQos, nodeWriter);
-
-                        var dw = new nodeWriter.vortexConn.vortex.DataWriter(nodeWriter.vortexConn.client, tdef, dwQos);
-
-                        dw.onconnect = function () {
-                            nodeWriter.status({fill: "green", shape: "ring", text: "Connected"});
+                            dw.onconnect = function () {
+                                nodeWriter.status({fill: "green", shape: "ring", text: "Connected"});
+                                nodeWriter.connected = true;
+                            };
                         };
 
-                        nodeWriter.on("input", function (msg) {
-                            dw.write(msg.payload);
-                        });
+                        nodeWriter.vortexConn.client.registerTopic(tdef);
                     };
 
-                    nodeWriter.vortexConn.client.registerTopic(tdef);
-                };
+                    if (nodeWriter.vortexConn.connected == false) {
+                        console.warn("[VortexOutNode]  -- connecting");
+                        nodeWriter.vortexConn.on('connected', function () {
+                            console.warn("[VortexOutNode]  -- createWriter");
+                            createWriter();
+                        });
 
-                if (nodeWriter.vortexConn.connected == false) {
-                    console.warn("[VortexOutNode]  -- connecting");
-                    nodeWriter.vortexConn.on('connected', function () {
+                        nodeWriter.vortexConn.register();
+                        nodeWriter.vortexConn.connect();
+                        console.warn("[VortexOutNode]  -- connected");
+                    } else {
+                        console.warn("[VortexOutNode]  -- already connected");
                         console.warn("[VortexOutNode]  -- createWriter");
                         createWriter();
-                    });
-
-                    nodeWriter.vortexConn.register();
-                    nodeWriter.vortexConn.connect();
-                    console.warn("[VortexOutNode]  -- connected");
-                } else {
-                    console.warn("[VortexOutNode]  -- already connected");
-                    console.warn("[VortexOutNode]  -- createWriter");
-                    createWriter();
+                    }
                 }
             }
         });
 
         nodeWriter.on("close", function () {
             console.warn("[VortexOutNode] -- Close");
+            nodeWriter.connected = false;
+            dw.close();
+            nodeWriter.removeAllListeners();
         });
-
     }
 
     RED.nodes.registerType("prismtech-vortex-out", VortexOutNode);
