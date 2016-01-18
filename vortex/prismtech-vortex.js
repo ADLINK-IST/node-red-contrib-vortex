@@ -224,11 +224,13 @@ module.exports = function (RED) {
         }
         //});
 
-        nodeReader.on("close", function () {
-            console.warn("[VortexInNode] -- Close");
-            dr.removeListener(listener);
-            dr.close();
-        });
+            nodeReader.on("close", function () {
+                console.warn("[VortexInNode] -- Close");
+                if(dr !== null) {
+                        dr.removeListener(listener);
+                        dr.close();
+                }
+            });
 
     }
 
@@ -310,7 +312,9 @@ module.exports = function (RED) {
         nodeWriter.on("close", function () {
             console.warn("[VortexOutNode] -- Close");
             nodeWriter.connected = false;
-            dw.close();
+            if(dw !== null) {
+                dw.close();
+            }
             nodeWriter.removeAllListeners();
         });
     }
