@@ -14,7 +14,6 @@ module.exports = function (RED) {
     //"use strict";
     var vortex = require("node-vortex");
     var events = require("events");
-    var util = require("util");
 
     function VortexServerNode(n) {
         RED.nodes.createNode(this, n);
@@ -27,8 +26,6 @@ module.exports = function (RED) {
         this.connecting = false;
         this.usecount = 0;
         this.queue = [];
-
-        events.EventEmitter.call(this);
 
         if (this.credentials) {
             this.username = this.credentials.user;
@@ -84,7 +81,6 @@ module.exports = function (RED) {
 
     }
 
-    util.inherits(VortexServerNode, events.EventEmitter);
     RED.nodes.registerType("prismtech-vortex", VortexServerNode, {
         credentials: {
             user: {type: "text"},
