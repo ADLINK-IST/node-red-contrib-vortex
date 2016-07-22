@@ -2,19 +2,13 @@
 Node-RED nodes for publishing data to and subscribing to data from PrismTech Vortex
 
 # Installing
-## Clone node-vortex
-Clone the https://github.com/PrismTech/node-vortex repository.
-Install node module locally from source
 ```bash
-npm link node-vortex
+npm install -g node-red node-red-contrib-vortex
 ``` 
-
-## Add the Vortex nodes to Node-RED
-In your Node-RED settings.js file set teh nodesDir property to this directory.
 
 ## Run Node-RED
 ```bash
-node red.js -v
+node-red
 ```
 
 Open your browser to localhost:1880/#
