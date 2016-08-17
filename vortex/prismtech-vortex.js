@@ -280,6 +280,8 @@ module.exports = function (RED) {
                             dw.onconnect = function () {
                                 nodeWriter.status({fill: "green", shape: "ring", text: "Connected"});
                                 nodeWriter.connected = true;
+                                console.log(msg.payload);
+                                dw.write(msg.payload);
                             };
                         };
 
