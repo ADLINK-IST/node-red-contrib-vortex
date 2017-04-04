@@ -1,10 +1,13 @@
 {
   "name": "node-red-contrib-vortex",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Node-RED for using data from PrismTechs' Vortex Global Data Space",
   "homepage": "http://www.prismtech/vortex",
   "license": "Apache-2.0",
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
   "contributors": [
     {
       "name": "Toby McClean"
@@ -19,7 +22,7 @@
   ],
   "dependencies": {
     "ws": "^0.8.0",
-    "node-vortex": "^0.2.0"
+    "node-vortex": "^0.3.0"
   },
   "node-red": {
     "nodes": {
